@@ -99,7 +99,7 @@ def create_figure_VPED(data,lon,lat):
                                                        x=1,
                                                        xanchor="right"),
                                          colorscale=['lightblue','green','yellow','orange','red'],
-                                         cmax=10,
+                                         cmax=360,
                                          cmin=0,
                                         ),
                             hoverinfo='skip',
