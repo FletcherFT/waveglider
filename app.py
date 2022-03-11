@@ -359,7 +359,6 @@ def datacollection():
     print(f"df_power_status: {df_power_status.columns} , {len(df_power_status)}")
     print(f"df_weather: {df_weather.columns} , {len(df_weather)}")
     
-    print(f"df_wvgl: {df_wvgl['heading_desired']} , {df_wvgl['heading_sub']}, {df_wvgl['target_waypoint'] }")
     return df,df_wvgl,df_power_status,df_weather
 
 def draw_plots(df):
@@ -497,15 +496,6 @@ def draw_engplots(df):
             return None, True
     else:
         return None, True
-
-def findheading(df):
-    #to plot an error that indicates heading, lat and lon of arrow tip are necessary
-    la2 =  math.asin(math.sin(df['latitude'].iloc[-1]) * math.cos(100)  + math.cos(df['latitude'].iloc[-1]) * math.sin(100) * math.cos((df['heading_desired'].iloc[-1])*math.pi/360))
-    lo2 = (df['longitude'].iloc[-1]) + math.atan2((math.sin((df['heading_desired'].iloc[-1])*math.pi/360)* math.sin(100) * math.cos(df['latitude'].iloc[-1])) , (math.cos(100) - math.sin(df['latitude'].iloc[-1]) * math.sin(la2)))
-    print(f"la2: {la2}, lo2: {lo2}")
-    print(f"la1: {df['latitude'].iloc[-1]}, lo1: {df['longitude'].iloc[-1]}")
-    print(df['heading_desired'].iloc[-1])
-    return [la2,lo2]
     
 def gps_track(df):
     
@@ -1067,37 +1057,38 @@ def gps_colourscale(value,dataset,forecast):
 def alarm_bar(dataset):
     df_datasets = json.loads(dataset)
     df_wvgl = pd.read_json(df_datasets['df_wvgl'], orient='split')
+    df = pd.read_json(df_datasets['df'], orient='split')
     #TODO mabe this is not sufficient?
-    if df_wvgl is not None:
-        alarms=alarm(df_wvgl)
-        active_=active(df_wvgl) 
-        print(active_) 
-        if len(alarms)==0 and str(active_)=='True': ## implement: and time since last update <XX
-            return dbc.Row([
-                html.H5("Glider status: Active , No Alarms")], 
-                style={'background-color': 'rgb(0, 204, 0)','text-align':'center'},align="center",justify="center")
-        if len(alarms)>0 and str(active_)=='True':
-            alarmstring=''
-            for a in alarms:
-                alarmstring=alarmstring+' '+str(a)
-            return dbc.Row([
-                html.H5(f"Glider status: Active , Alarms : {alarmstring} ")], 
-                style={'background-color': 'rgb(255, 255, 0)','text-align':'center'},align="center",justify="center")
-        if len(alarms)>0 and str(active_)=='False':
-            alarmstring=''
-            for a in alarms:
-                alarmstring=alarmstring+' '+str(a)
-            return dbc.Row([
-                html.H5(f"Glider status: Not active , Alarms : {alarmstring} ")], 
-                style={'background-color': 'rgb( 199, 0, 57)','text-align':'center'},align="center",justify="center")
-        if len(alarms)==0 and str(active_)=='False':
-            return dbc.Row([
-                html.H5(f"Glider status: Not active , No Alarms")], 
-                style={'background-color': 'rgb( 199, 0, 57)','text-align':'center'},align="center",justify="center")
-        else:
-            return dbc.Row([
-                html.H5(f"Glider status: Not active , No Alarms")], 
-                style={'background-color': 'rgb( 199, 0, 57)','text-align':'center'},align="center",justify="center")
+    if df_wvgl is not None and {'timestamp'}.issubset(df_wvgl.columns):
+            alarms=alarm(df_wvgl)
+            active_=active(df_wvgl) 
+            print(active_) 
+            if len(alarms)==0 and str(active_)=='True': ## implement: and time since last update <XX
+                return dbc.Row([
+                    html.H5("Glider status: Active , No Alarms")], 
+                    style={'background-color': 'rgb(0, 204, 0)','text-align':'center'},align="center",justify="center")
+            if len(alarms)>0 and str(active_)=='True':
+                alarmstring=''
+                for a in alarms:
+                    alarmstring=alarmstring+' '+str(a)
+                return dbc.Row([
+                    html.H5(f"Glider status: Active , Alarms : {alarmstring} ")], 
+                    style={'background-color': 'rgb(255, 255, 0)','text-align':'center'},align="center",justify="center")
+            if len(alarms)>0 and str(active_)=='False':
+                alarmstring=''
+                for a in alarms:
+                    alarmstring=alarmstring+' '+str(a)
+                return dbc.Row([
+                    html.H5(f"Glider status: Not active , Alarms : {alarmstring} ")], 
+                    style={'background-color': 'rgb( 199, 0, 57)','text-align':'center'},align="center",justify="center")
+            if len(alarms)==0 and str(active_)=='False':
+                return dbc.Row([
+                    html.H5(f"Glider status: Not active , No Alarms")], 
+                    style={'background-color': 'rgb( 199, 0, 57)','text-align':'center'},align="center",justify="center")
+            else:
+                return dbc.Row([
+                    html.H5(f"Glider status: Not active , No Alarms")], 
+                    style={'background-color': 'rgb( 199, 0, 57)','text-align':'center'},align="center",justify="center")
     else:
         return dbc.Row([
                 html.H5(f"Glider status: Not known , No alarm data available")], 
