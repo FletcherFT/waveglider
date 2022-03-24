@@ -45,7 +45,7 @@ lookbacktime=30
 token="pk.eyJ1IjoiczIxMzUzNSIsImEiOiJja3Y5ZjU2azI1dXByMnVzN2xkNzM1MXdsIn0.UX-Yc5568zDhcQ9uZ3ytJw"
 
 #Copernicus Data
-def access_oceanographic_prediction(current_time=datetime.utcnow(), lonmin=-30, lonmax=30, latmin=0, latmax=80):
+def access_oceanographic_prediction(indicator,current_time=datetime.utcnow(), lonmin=-30, lonmax=30, latmin=0, latmax=80):
     
     #convert times to strings
     datestr_now = (current_time).date().strftime("%Y-%m-%d")
@@ -57,11 +57,18 @@ def access_oceanographic_prediction(current_time=datetime.utcnow(), lonmin=-30, 
     #set access data
     USERNAME = 'pmariani'
     PASSWORD = 'JkxJcsY6'
-    DATASET_ID = 'global-analysis-forecast-wav-001-027'
     
-    #read data from url 
-    data = xr.open_dataset("https://"+USERNAME+":"+PASSWORD+"@nrt.cmems-du.eu/thredds/dodsC/"+DATASET_ID).sel(time=slice(datestr_now+"T00:00:00.000000000", datestr_fut+"T00:00:00.000000000"),longitude=slice(lonmin,lonmax),latitude=slice(latmin,latmax))[['VHM0', 'VPED']]
-    
+    if indicator==1:
+        DATASET_ID = 'global-analysis-forecast-wav-001-027'
+        
+        #read data from url 
+        data = xr.open_dataset("https://"+USERNAME+":"+PASSWORD+"@nrt.cmems-du.eu/thredds/dodsC/"+DATASET_ID).sel(time=slice(datestr_now+"T00:00:00.000000000", datestr_fut+"T00:00:00.000000000"),longitude=slice(lonmin,lonmax),latitude=slice(latmin,latmax))[['VHM0', 'VPED']]
+    elif indicator==2:
+        DATASET_ID = 'global-analysis-forecast-phy-001-024'
+        
+        #read data from url 
+        data = xr.open_dataset("https://"+USERNAME+":"+PASSWORD+"@nrt.cmems-du.eu/thredds/dodsC/"+DATASET_ID).sel(time=slice(datestr_now+"T00:00:00.000000000", datestr_fut+"T00:00:00.000000000"),longitude=slice(lonmin,lonmax),latitude=slice(latmin,latmax))[['uo','vo']]     
+        
     return data
 
 def create_figure_VPED(data,lon,lat):
@@ -94,7 +101,7 @@ def create_figure_VPED(data,lon,lat):
                                          size=11,
                                          color=pow_arr,showscale=True,
                                          colorbar=dict(title={
-                                                         'text':'wavedirection in °',
+                                                         'text':'<b>Wavedirection in [°]</b>',
                                                          'side':'right'},
                                                        x=1,
                                                        xanchor="right"),
@@ -189,13 +196,203 @@ def create_figure_VHMO(data,lon,lat):
                                          size=11,
                                          color=pow_arr,showscale=True,
                                          colorbar=dict(title={
-                                                         'text':'waveheight in m',
+                                                         'text':'<b>Waveheight in [m]</b>',
                                                          'side':'right'},
                                                        x=1,
                                                        xanchor="right"),
                                          colorscale=['lightblue','green','yellow','orange','red'],
                                          cmax=10,
                                          cmin=0,
+                                        ),
+                            hoverinfo='skip',
+                             ))
+
+    fig.data[0].visible = True   
+    
+    #Add dot for current position
+    fig.add_trace(
+            go.Scattermapbox(visible=True,
+                             lat=[lat], 
+                             lon=[lon], 
+                             mode="markers",
+                             marker=dict(opacity=1,
+                                         size=12,
+                                         color="black"
+                                        ),
+                             name="current position"
+                             ))
+
+    # Create and add slider
+    steps = []
+    times=slice_d.indexes['time'].round('H')
+    for i in range(len(fig.data)-1):
+        step = dict(
+            method="update",
+            args=[{"visible": [False] * len(fig.data)}],
+            label=times[i].strftime("%m/%d/%Y"),  # layout attribute
+        )
+        step["args"][0]["visible"][i] = True  # Toggle i'th trace to "visible"
+        step["args"][0]["visible"][-1] = True
+        steps.append(step)
+
+    sliders = [dict(
+        active=10,
+        currentvalue={"prefix": "Date: "},
+        pad={"t": 10,"l":30,"b":20},
+        steps=steps,
+        len=0.5
+    )]
+    
+
+    fig.update_layout(
+        sliders=sliders,
+        margin={"r":0,"t":0,"l":0,"b":0},
+        mapbox= {
+            'style': "mapbox://styles/s213535/cl0dt0lzo000115mrm7ev76ph",   #mapbox://styles/s213535/ckvjeiz2d8yho15o2euqwbt9z
+            'center': {'lon': lon, 'lat': lat}, 
+            'zoom': 4,
+            'accesstoken':token},
+        showlegend=False,
+        paper_bgcolor=colors['lightblue'],
+        plot_bgcolor=colors['lightblue']
+        )
+
+    return fig
+
+def create_figure_north_current(data,lon,lat): 
+    
+    north_slice = data.isel(depth=slice(None,1))
+
+    slice_d = north_slice.isel(time=slice(0, 4, 1))
+
+    # Create figure
+    fig = go.Figure()
+
+    for t in range(len(slice_d.indexes['time'])): 
+        north_slice = slice_d["vo"][t]
+        #vhmo_data=vhmo_data.to_series()
+
+        df_pd_north_df=north_slice.to_dataframe()
+
+        lat_arr=np.array(df_pd_north_df.index.get_level_values(1))
+        lon_arr=np.array(df_pd_north_df.index.get_level_values(2))
+        pow_arr= np.array(df_pd_north_df['vo'])
+
+        lat_arr=lat_arr[~np.isnan(pow_arr)]
+        lon_arr=lon_arr[~np.isnan(pow_arr)]
+        pow_arr=pow_arr[~np.isnan(pow_arr)]
+
+        fig.add_trace(
+            go.Scattermapbox(visible=False,
+                             lat=lat_arr, 
+                             lon=lon_arr, 
+                             mode="markers",
+                             marker=dict(opacity=0.4,
+                                         size=11,
+                                         color=pow_arr,showscale=True,
+                                         colorbar=dict(title={
+                                                         'text':'<b>Current velocity <br> north direction <br> [m/s]</b>',
+                                                         'side':'right'},
+                                                       x=1,
+                                                       xanchor="right"),
+                                         colorscale=['pink','purple','darkblue','lightblue','green','yellow','orange'],
+                                         cmax=1.2,
+                                         cmin=-1.2,
+                                        ),
+                            hoverinfo='skip',
+                             ))
+
+    fig.data[0].visible = True   
+    
+    #Add dot for current position
+    fig.add_trace(
+            go.Scattermapbox(visible=True,
+                             lat=[lat], 
+                             lon=[lon], 
+                             mode="markers",
+                             marker=dict(opacity=1,
+                                         size=12,
+                                         color="black"
+                                        ),
+                             name="current position"
+                             ))
+
+    # Create and add slider
+    steps = []
+    times=slice_d.indexes['time'].round('H')
+    for i in range(len(fig.data)-1):
+        step = dict(
+            method="update",
+            args=[{"visible": [False] * len(fig.data)}],
+            label=times[i].strftime("%m/%d/%Y"),  # layout attribute
+        )
+        step["args"][0]["visible"][i] = True  # Toggle i'th trace to "visible"
+        step["args"][0]["visible"][-1] = True
+        steps.append(step)
+
+    sliders = [dict(
+        active=10,
+        currentvalue={"prefix": "Date: "},
+        pad={"t": 10,"l":30,"b":20},
+        steps=steps,
+        len=0.5
+    )]
+    
+
+    fig.update_layout(
+        sliders=sliders,
+        margin={"r":0,"t":0,"l":0,"b":0},
+        mapbox= {
+            'style': "mapbox://styles/s213535/cl0dt0lzo000115mrm7ev76ph",   #mapbox://styles/s213535/ckvjeiz2d8yho15o2euqwbt9z
+            'center': {'lon': lon, 'lat': lat}, 
+            'zoom': 4,
+            'accesstoken':token},
+        showlegend=False,
+        paper_bgcolor=colors['lightblue'],
+        plot_bgcolor=colors['lightblue']
+        )
+
+    return fig
+
+def create_figure_east_current(data,lon,lat): 
+    
+    east_slice = data.isel(depth=slice(None,1))
+
+    slice_d = east_slice.isel(time=slice(0, 4, 1))
+
+    # Create figure
+    fig = go.Figure()
+
+    for t in range(len(slice_d.indexes['time'])): 
+        east_slice = slice_d["uo"][t]
+        #vhmo_data=vhmo_data.to_series()
+
+        df_pd_east_df=east_slice.to_dataframe()
+
+        lat_arr=np.array(df_pd_east_df.index.get_level_values(1))
+        lon_arr=np.array(df_pd_east_df.index.get_level_values(2))
+        pow_arr= np.array(df_pd_east_df['uo'])
+
+        lat_arr=lat_arr[~np.isnan(pow_arr)]
+        lon_arr=lon_arr[~np.isnan(pow_arr)]
+        pow_arr=pow_arr[~np.isnan(pow_arr)]
+
+        fig.add_trace(
+            go.Scattermapbox(visible=False,
+                             lat=lat_arr, 
+                             lon=lon_arr, 
+                             mode="markers",
+                             marker=dict(opacity=0.4,
+                                         size=11,
+                                         color=pow_arr,showscale=True,
+                                         colorbar=dict(title={
+                                                         'text':'<b>Current velocity <br> east direction <br> [m/s]</b>',
+                                                         'side':'right'},
+                                                       x=1,
+                                                       xanchor="right"),
+                                         colorscale=['pink','purple','darkblue','lightblue','green','yellow','orange'],
+                                         cmax=1.2,
+                                         cmin=-1.2,
                                         ),
                             hoverinfo='skip',
                              ))
@@ -383,7 +580,10 @@ def draw_plots(df):
             fig_o2co2temp.add_trace(go.Scatter(
                 x=df1.index,
                 y=df1["temperature"],
-                name="Temperature"
+                name="Temperature",
+                mode="markers+lines",
+                marker=dict(color="blue",size=1),
+                line=dict(color="blue")
             ))
         else:
             temp_alert=True
@@ -394,7 +594,10 @@ def draw_plots(df):
                 x=df1.index,
                 y=df1["co2_concentration"],
                 name="O2 Concentration",
-                yaxis="y2"
+                yaxis="y2",
+                mode="markers+lines",
+                marker=dict(color="orange",size=1),
+                line=dict(color="orange")
             ))
         else:
             co2_alert=True
@@ -404,7 +607,10 @@ def draw_plots(df):
                 x=df1.index,
                 y=df1["o2_concentration"],
                 name="O2 Concentration",
-                yaxis="y3"
+                yaxis="y3",
+                mode="markers+lines",
+                marker=dict(color="red",size=1),
+                line=dict(color="red")
             ))
         else:
             o2_alert=True
@@ -415,6 +621,11 @@ def draw_plots(df):
         ),
         yaxis=dict(
             title="Temperature in Degree Celsius °C",
+            showgrid=False,
+            ticks="outside", 
+            tickwidth=3, 
+            tickcolor='blue', 
+            ticklen=5
             #gridcolor='LightPink',
         ),
         yaxis2=dict(
@@ -422,7 +633,12 @@ def draw_plots(df):
             anchor="free",
             overlaying="y",
             side="left",
-            position=0.07,
+            position=0.05,
+            showgrid=False,
+            ticks="outside", 
+            tickwidth=3, 
+            tickcolor='orange', 
+            ticklen=5
             #gridcolor='green'
         ),
         yaxis3=dict(
@@ -430,6 +646,11 @@ def draw_plots(df):
             anchor="x",
             overlaying="y",
             side="right",
+            showgrid=False,
+            ticks="outside", 
+            tickwidth=3, 
+            tickcolor='red', 
+            ticklen=5
             #gridcolor='blue'
         ))
         fig_o2co2temp.update_layout(legend=dict(
@@ -461,18 +682,27 @@ def draw_engplots(df):
             fig_bat.append_trace(go.Scatter(
                 x=df1.index,
                 y=df1["solar_power_generated"],
-                name="Generated solar power"
+                name="Generated solar power",
+                mode="lines+markers",
+                line={"color":"blue"},
+                marker={"size":1,"color":"blue"}
             ),row=1, col=1)
             fig_bat.append_trace(go.Scatter(
                 x=df1.index,
                 y=df1["battery_charging_power"],
-                name="Battery charging power"
+                name="Battery charging power",
+                mode="lines+markers",
+                line={"color":"green"},
+                marker={"size":1,"color":"green"}
             ),row=1, col=1)
             fig_bat.append_trace(go.Scatter(
                 x=df1.index,
                 y=df1["total_battery_power"],
                 name="Total battery power",
-                yaxis="y2"
+                yaxis="y2",
+                mode="lines+markers",
+                line={"color":"red"},
+                marker={"size":1,"color":"red"}
             ),row=2, col=1)
             
             fig_bat.update_yaxes(title_text="Power usage and <br> generation in mW", row=1, col=1)
@@ -488,6 +718,14 @@ def draw_engplots(df):
             ))
             fig_bat.update_layout(
                 margin={'l':0,'t':10,'r':0},
+                xaxis=dict(showgrid=True,showline=True, linewidth=1, linecolor='black',
+                           title_font=dict(size=16, family='Arial')),
+                yaxis=dict(showgrid=True,showline=True, linewidth=1, linecolor='black',
+                           title_font=dict(size=16, family='Arial')),
+                xaxis2=dict(showgrid=True,showline=True, linewidth=1, linecolor='black',
+                           title_font=dict(size=16, family='Arial')),
+                yaxis2=dict(showgrid=True,showline=True, linewidth=1, linecolor='black',
+                           title_font=dict(size=16, family='Arial'))
             )
         
             #fig2=px.line(df1, x=df1.index, y=["temperature", "air_saturation", "o2_concentration"])
@@ -624,7 +862,11 @@ def gps_track_co2(df):
     mode = "markers",
     lon = df['longitude'],
     lat = df['latitude'],
-    marker = {'size': 4, 'color':df["co2_concentration"],'colorscale':'Turbo','showscale':True,'colorbar':{'title':{'text':'co2 concentration in mg/l','side':'right'},'x':1,'xanchor':"right"}}))    
+    marker = {'size': 4, 
+              'color':df["co2_concentration"],
+              'colorscale':'Turbo','showscale':True,
+              'colorbar':{'title':{'text':'co2 concentration in mg/l','side':'right'},
+                          'x':1,'xanchor':"right"}}))    
     '''
     fig.add_trace(go.Scattermapbox(
         mode = "markers+lines",
@@ -689,7 +931,7 @@ def current_scientificdata_table(df):
 def current_engsit_table(df):
     if {'solar_power_generated'}.issubset(df.columns) and {'battery_charging_power'}.issubset(df.columns) and {'total_battery_power'}.issubset(df.columns):
         #create table with current location and speed
-        columns=['Solar generated power', 'Battery charging power [MW]', 'Battery power [Wh]' ]
+        columns=['Solar generated power [MW]', 'Battery charging power [MW]', 'Battery power [Wh]' ]
         if df['solar_power_generated'].iloc[-1] is None:
             solar=0
         else:
@@ -702,6 +944,7 @@ def current_engsit_table(df):
             battery_power=0
         else:
             battery_power=round(df['total_battery_power'].iloc[-1],2)
+
         data=[{'Solar generated power [MW]':solar,'Battery charging power [MW]':battery_charge,'Battery power [Wh]':battery_power}]
         table=[columns,data]
         return table
@@ -872,7 +1115,10 @@ second_row=dbc.Card([
                                             id='forecast_dropdown',
                                             options=[{'label': 'Waveheight Forecast', 'value': 'Waveheight Forecast'},
                                                      {'label': 'Wavedirection Forecast', 'value': 'Wavedirection Forecast'},
+                                                     {'label': 'Surface Current East Direction Forecast', 'value': 'Surface Current East Direction Forecast'},
+                                                     {'label': 'Surface Current North Direction Forecast', 'value': 'Surface Current North Direction Forecast'},
                                                      {'label': 'No Forecast', 'value': 'No Forecast'}],
+                                            
                                             value='No Forecast',style={'background-color':colors['white']}),
                                 ],width={"size": 3})
                             ],justify="around",),
@@ -1021,14 +1267,22 @@ def gps_colourscale(value,dataset,forecast):
     else:
         lon=0
         lat=0
-    
-    predict_data=access_oceanographic_prediction(lonmin=lon-70,lonmax=lon+70,latmin=lat-10,latmax=lat+10)
-    
+
     if forecast == "Waveheight Forecast":
+        predict_data=access_oceanographic_prediction(1,lonmin=lon-70,lonmax=lon+70,latmin=lat-10,latmax=lat+10)
         fig_fore=create_figure_VHMO(predict_data,lon,lat)
         return fig_fore
     elif forecast == "Wavedirection Forecast":
+        predict_data=access_oceanographic_prediction(1,lonmin=lon-70,lonmax=lon+70,latmin=lat-10,latmax=lat+10)
         fig_fore=create_figure_VPED(predict_data,lon,lat)
+        return fig_fore
+    elif forecast == "Surface Current North Direction Forecast":
+        predict_data=access_oceanographic_prediction(2,lonmin=lon-70,lonmax=lon+70,latmin=lat-10,latmax=lat+10)
+        fig_fore=create_figure_north_current(predict_data,lon,lat)
+        return fig_fore
+    elif forecast == "Surface Current East Direction Forecast":
+        predict_data=access_oceanographic_prediction(2,lonmin=lon-70,lonmax=lon+70,latmin=lat-10,latmax=lat+10)
+        fig_fore=create_figure_east_current(predict_data,lon,lat)
         return fig_fore
         
     elif forecast == "No Forecast":
