@@ -672,15 +672,7 @@ def draw_engplots(df):
         df1 = df.set_index('timestamp')
         
         if {'solar_power_generated'}.issubset(df1.columns) and {'battery_charging_power'}.issubset(df1.columns) and {'total_battery_power'}.issubset(df1.columns):
-            '''
-            N = 1000
-            t = np.linspace(0, 10, 100)
-            y = np.sin(t)
             
-            fig = go.Figure(data=go.Scatter(x=df1.index, y=df1["solar_power_generated"], mode='markers'))
-            
-            '''
-            #df1.plot(y=["solar_power_generated", "battery_charging_power", "total_battery_power"])
             
             fig_bat = make_subplots(rows=2, cols=1)
         
@@ -701,7 +693,7 @@ def draw_engplots(df):
                 yaxis="y2",
             ),row=2, col=1)
             
-            '''
+            
             fig_bat.update_yaxes(title_text="Power usage and <br> generation in mW", row=1, col=1)
             fig_bat.update_yaxes(title_text="Total battery <br> power in Wh", row=2, col=1)
             
@@ -716,8 +708,7 @@ def draw_engplots(df):
             fig_bat.update_layout(
                 margin={'l':0,'t':10,'r':0}
             )
-            '''
-            #fig2=px.line(df1, x=df1.index, y=["temperature", "air_saturation", "o2_concentration"])
+            
             return fig_bat,False
         else:
             return None, True
