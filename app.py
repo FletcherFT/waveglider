@@ -38,7 +38,7 @@ warnings.simplefilter("ignore")
 # Add the Oceanographic data
 
 #global constants
-lookbacktime=30 
+lookbacktime=50 
     
 #functions
 token="pk.eyJ1IjoiczIxMzUzNSIsImEiOiJja3Y5ZjU2azI1dXByMnVzN2xkNzM1MXdsIn0.UX-Yc5568zDhcQ9uZ3ytJw"
