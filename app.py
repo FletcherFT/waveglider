@@ -701,6 +701,7 @@ def draw_engplots(df):
                 yaxis="y2",
             ),row=2, col=1)
             
+            '''
             fig_bat.update_yaxes(title_text="Power usage and <br> generation in mW", row=1, col=1)
             fig_bat.update_yaxes(title_text="Total battery <br> power in Wh", row=2, col=1)
             
@@ -715,7 +716,7 @@ def draw_engplots(df):
             fig_bat.update_layout(
                 margin={'l':0,'t':10,'r':0}
             )
-        
+            '''
             #fig2=px.line(df1, x=df1.index, y=["temperature", "air_saturation", "o2_concentration"])
             return fig_bat,False
         else:
