@@ -670,15 +670,16 @@ def draw_engplots(df):
     
     if {'timestamp'}.issubset(df.columns):
         df1 = df.set_index('timestamp')
-        N = 1000
-        t = np.linspace(0, 10, 100)
-        y = np.sin(t)
-        
-        fig = go.Figure(data=go.Scatter(x=t, y=y, mode='markers'))
-        '''
         
         if {'solar_power_generated'}.issubset(df1.columns) and {'battery_charging_power'}.issubset(df1.columns) and {'total_battery_power'}.issubset(df1.columns):
-        
+            
+            N = 1000
+            t = np.linspace(0, 10, 100)
+            y = np.sin(t)
+            
+            fig = go.Figure(data=go.Scatter(x=t, y=y, mode='markers'))
+            
+            '''
             df.plot(y=["solar_power_generated", "battery_charging_power", "total_battery_power"])
             
             fig_bat = make_subplots(rows=2, cols=1)
