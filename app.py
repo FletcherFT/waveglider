@@ -717,15 +717,7 @@ def draw_engplots(df):
                     x=1
             ))
             fig_bat.update_layout(
-                margin={'l':0,'t':10,'r':0},
-                xaxis=dict(showgrid=True,showline=True, linewidth=1, linecolor='black',
-                           title_font=dict(size=16, family='Arial')),
-                yaxis=dict(showgrid=True,showline=True, linewidth=1, linecolor='black',
-                           title_font=dict(size=16, family='Arial')),
-                xaxis2=dict(showgrid=True,showline=True, linewidth=1, linecolor='black',
-                           title_font=dict(size=16, family='Arial')),
-                yaxis2=dict(showgrid=True,showline=True, linewidth=1, linecolor='black',
-                           title_font=dict(size=16, family='Arial'))
+                margin={'l':0,'t':10,'r':0}
             )
         
             #fig2=px.line(df1, x=df1.index, y=["temperature", "air_saturation", "o2_concentration"])
