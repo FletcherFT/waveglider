@@ -677,10 +677,10 @@ def draw_engplots(df):
             t = np.linspace(0, 10, 100)
             y = np.sin(t)
             
-            fig = go.Figure(data=go.Scatter(x=t, y=y, mode='markers'))
+            fig = go.Figure(data=go.Scatter(x=df1.index, y=df1["solar_power_generated"], mode='markers'))
             
             '''
-            df.plot(y=["solar_power_generated", "battery_charging_power", "total_battery_power"])
+            df1.plot(y=["solar_power_generated", "battery_charging_power", "total_battery_power"])
             
             fig_bat = make_subplots(rows=2, cols=1)
         
