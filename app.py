@@ -683,26 +683,17 @@ def draw_engplots(df):
                 x=df1.index,
                 y=df1["solar_power_generated"],
                 name="Generated solar power",
-                mode="lines+markers",
-                line={"color":"blue"},
-                marker={"size":1,"color":"blue"}
             ),row=1, col=1)
             fig_bat.append_trace(go.Scatter(
                 x=df1.index,
                 y=df1["battery_charging_power"],
                 name="Battery charging power",
-                mode="lines+markers",
-                line={"color":"green"},
-                marker={"size":1,"color":"green"}
             ),row=1, col=1)
             fig_bat.append_trace(go.Scatter(
                 x=df1.index,
                 y=df1["total_battery_power"],
                 name="Total battery power",
                 yaxis="y2",
-                mode="lines+markers",
-                line={"color":"red"},
-                marker={"size":1,"color":"red"}
             ),row=2, col=1)
             
             fig_bat.update_yaxes(title_text="Power usage and <br> generation in mW", row=1, col=1)
