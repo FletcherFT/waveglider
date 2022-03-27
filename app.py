@@ -22,7 +22,6 @@ import plotly.graph_objects as go
 
 from plotly.subplots import make_subplots 
 import json  
-import math
 import warnings 
 
 import xarray as xr
@@ -674,8 +673,6 @@ def draw_engplots(df):
         if {'solar_power_generated'}.issubset(df1.columns) and {'battery_charging_power'}.issubset(df1.columns) and {'total_battery_power'}.issubset(df1.columns):
         
             df.plot(y=["solar_power_generated", "battery_charging_power", "total_battery_power"])
-            
-            
             
             fig_bat = make_subplots(rows=2, cols=1)
         
