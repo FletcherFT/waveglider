@@ -667,9 +667,15 @@ def draw_plots(df):
         return fig_o2co2temp,temp_alert,co2_alert,o2_alert
 
 def draw_engplots(df):
-    '''
+    
     if {'timestamp'}.issubset(df.columns):
         df1 = df.set_index('timestamp')
+        N = 1000
+        t = np.linspace(0, 10, 100)
+        y = np.sin(t)
+        
+        fig = go.Figure(data=go.Scatter(x=t, y=y, mode='markers'))
+        '''
         
         if {'solar_power_generated'}.issubset(df1.columns) and {'battery_charging_power'}.issubset(df1.columns) and {'total_battery_power'}.issubset(df1.columns):
         
@@ -716,11 +722,7 @@ def draw_engplots(df):
     else:
         return None, True
     '''
-    N = 1000
-    t = np.linspace(0, 10, 100)
-    y = np.sin(t)
     
-    fig = go.Figure(data=go.Scatter(x=t, y=y, mode='markers'))
     return fig, False
     
 def gps_track(df):
