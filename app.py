@@ -672,7 +672,7 @@ def draw_engplots(df):
         df1 = df.set_index('timestamp')
         
         if {'solar_power_generated'}.issubset(df1.columns) and {'battery_charging_power'}.issubset(df1.columns) and {'total_battery_power'}.issubset(df1.columns):
-            
+            '''
             N = 1000
             t = np.linspace(0, 10, 100)
             y = np.sin(t)
@@ -722,9 +722,6 @@ def draw_engplots(df):
             return None, True
     else:
         return None, True
-    '''
-    
-    return fig, False
     
 def gps_track(df):
     
