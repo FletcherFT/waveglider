@@ -38,7 +38,7 @@ warnings.simplefilter("ignore")
 # Add the Oceanographic data
 
 #global constants
-lookbacktime=50 
+lookbacktime=30 
     
 #functions
 token="pk.eyJ1IjoiczIxMzUzNSIsImEiOiJja3Y5ZjU2azI1dXByMnVzN2xkNzM1MXdsIn0.UX-Yc5568zDhcQ9uZ3ytJw"
@@ -673,7 +673,6 @@ def draw_engplots(df):
         
         if {'solar_power_generated'}.issubset(df1.columns) and {'battery_charging_power'}.issubset(df1.columns) and {'total_battery_power'}.issubset(df1.columns):
             
-            
             fig_bat = make_subplots(rows=2, cols=1)
         
             fig_bat.append_trace(go.Scatter(
@@ -879,11 +878,11 @@ def active(df):
     current_time = datetime.now(timezone.utc)
     lookback = timedelta(hours=1)
      
-    datestr = (current_time-lookback).strftime("%Y-%m-%d %H:%M:%S%z") # "%Y-%m-%dT%H:%M:%S%z"
+    datestr = (current_time-lookback).strftime("%Y-%m-%dT%H:%M:%S%z") # "%Y-%m-%dT%H:%M:%S%z"
     print(f"lastupdate: {lastupdate} < datestring {datestr}")
-    print(datetime.strptime(lastupdate, "%Y-%m-%d %H:%M:%S%z"))
+    print(datetime.strptime(lastupdate, "%Y-%m-%dT%H:%M:%S%z"))
     
-    if datetime.strptime(lastupdate, "%Y-%m-%d %H:%M:%S%z")<datetime.strptime(datestr, "%Y-%m-%d %H:%M:%S%z"):
+    if datetime.strptime(lastupdate, "%Y-%m-%dT%H:%M:%S%z")<datetime.strptime(datestr, "%Y-%m-%dT%H:%M:%S%z"):
         return False
     else:
         return True 
