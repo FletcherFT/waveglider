@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Mar 23 12:56:42 2022
+
+@author: oeni
+"""
+#save loss per iteration and plot after learning
+
+
 
 import dash
 from dash import dcc
@@ -22,20 +32,33 @@ import plotly.graph_objects as go
 
 from plotly.subplots import make_subplots 
 import json  
+import orjson
 import warnings 
 
 import xarray as xr
-
+from flask_caching import Cache
 
 #matplotlib inline
 warnings.simplefilter("ignore")
 
 
 
+app = dash.Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
+server=app.server
 
+cache = Cache(app.server, config={
+    'CACHE_TYPE': 'filesystem',
+    'CACHE_DIR': 'cache-directory'
+})
 
-#TODO: filter NANs, so that the website still shows something!
-# Add the Oceanographic data
+#Style settings
+colors = {
+    'yellow': '#FFFFE0', ##111111',
+    'text': '#7FDBFF',
+    'darkblue': '#2f577d',
+    'white': '#FFFFFF',
+    'lightblue': '#d4ebf2'
+}
 
 #global constants
 lookbacktime=30 
@@ -44,6 +67,9 @@ lookbacktime=30
 token="pk.eyJ1IjoiczIxMzUzNSIsImEiOiJja3Y5ZjU2azI1dXByMnVzN2xkNzM1MXdsIn0.UX-Yc5568zDhcQ9uZ3ytJw"
 
 #Copernicus Data
+TIMEOUT = 60
+
+@cache.memoize(timeout=TIMEOUT)
 def access_oceanographic_prediction(indicator,current_time=datetime.utcnow(), lonmin=-30, lonmax=30, latmin=0, latmax=80):
     
     #convert times to strings
@@ -458,7 +484,9 @@ def create_figure_east_current(data,lon,lat):
 #def serve_static(resource):
 #    return flask.send_from_directory(STATIC_PATH, resource)
 
+TIMEOUT = 60
 
+@cache.memoize(timeout=TIMEOUT)
 def datacollection():
     
 
@@ -966,19 +994,6 @@ def weather_table(df):
         return table, img
     else:
         raise PreventUpdate
-
-
-app = dash.Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
-server=app.server
-
-#Style settings
-colors = {
-    'yellow': '#FFFFE0', ##111111',
-    'text': '#7FDBFF',
-    'darkblue': '#2f577d',
-    'white': '#FFFFFF',
-    'lightblue': '#d4ebf2'
-}
 
 
 #Defining the Layout. Split up into header, left side and right side
